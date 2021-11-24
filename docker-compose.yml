@@ -18,8 +18,10 @@ services:
   grafana:
     image: grafana/grafana
     container_name: grafana
+    env_file:
+    - grafana.env
     ports:
-      - "3000:3000"
+    - "3000:3000"
     volumes:
     - grafana_etc:/etc/grafana
     - grafana_var_lib:/var/lib/grafana
@@ -34,10 +36,44 @@ services:
   exporter:
     container_name: exporter
     build: mining-exporter
+    volumes:
+    - exporter_data:/prometheus-mining
     network_mode: host
-    environment:
-    - RIGS=${RIGS}
+    env_file:
+      - mining_exporter.env
     restart: always
+
+  alertmanager:
+    image: prom/alertmanager
+    volumes:
+      - ./alertmanager/:/etc/alertmanager/:ro
+    networks:
+      back:
+        ipv4_address: 172.18.0.5
+    restart: always
+    command:
+      - '--config.file=/etc/alertmanager/config.yml'
+      - '--storage.path=/alertmanager'
+    depends_on:
+    - prometheus
+
+  alertmanager-bot:
+    image: metalmatze/alertmanager-bot:0.4.2
+    container_name: alertmanager-bot
+    networks:
+      back:
+        ipv4_address: 172.18.0.6
+      front:
+    restart: always
+    env_file:
+      - alertmanager_bot.env
+    environment:
+      ALERTMANAGER_URL: http://172.18.0.5:9093
+      STORE: bolt
+      BOLT_PATH: /data/bot.db
+      TEMPLATE_PATHS: /templates/default.tmpl
+    volumes:
+    - alertmanager-bot_data:/data
 
 networks:
   back:
@@ -53,3 +89,5 @@ networks:
 volumes:
   grafana_var_lib:
   grafana_etc:
+  exporter_data:
+  alertmanager-bot_data:
