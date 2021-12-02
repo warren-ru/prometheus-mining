@@ -1,0 +1,3 @@
+- id: reload-plug
+  execute-command: "/app/reload-plug.py"
+  command-working-directory: "/app"

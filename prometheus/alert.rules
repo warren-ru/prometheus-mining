@@ -2,9 +2,30 @@ groups:
 - name: mining
   rules:
   - alert: "MinerDown"
-    expr: uptime == 0
+    expr: up{job='miner'} == 0
     for: 2m
+    labels:
+      severity: critical
+    annotations:
+      message: "Miner {{ $labels.host }} down"
+  - alert: "LowHashrate"
+    expr: avg(hashrate{job="miner"}) < 90 unless up{job="miner"}!=0
+    for: 30m
     labels:
       severity: warning
     annotations:
-      message: "Miner {{ $labels.host }} down"
+      message: "Average hashrate of {{ $labels.host }} is very low ({{ $value }} MHs)"
+  - alert: "GpuDown"
+    expr: hashrate == 0 unless up{job="miner"}!=0
+    for: 3m
+    labels:
+      severity: critical
+    annotations:
+      message: "GPU {{ $labels.gpu }} is down"
+  - alert: "HighTemp"
+    expr: temperature > 54
+    for: 3m
+    labels:
+      severity: warning
+    annotations:
+      message: "GPU {{ $labels.gpu }} temperature is {{ $value }}"

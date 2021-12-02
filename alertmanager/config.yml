@@ -1,8 +1,20 @@
 route:
   receiver: 'alertmanager-bot'
+  group_by: [host]
+  routes:
+  - matchers:
+    - severity="critical"
+    receiver: restart-rig
 
 receivers:
 - name: 'alertmanager-bot'
   webhook_configs:
   - send_resolved: true
-    url: 'http://172.18.0.6:8080'
+    url: 'http://alertmanager-bot:8080'
+
+- name: 'restart-rig'
+  webhook_configs:
+  - send_resolved: true
+    url: 'http://alertmanager-bot:8080'
+  - send_resolved: false
+    url: 'http://webhook-script:9000/hooks/reload-plug'
