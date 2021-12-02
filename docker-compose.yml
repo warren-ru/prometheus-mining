@@ -9,6 +9,7 @@ services:
     - "10.10.40.101:9090:9090"
     volumes:
     - ./prometheus:/etc/prometheus:ro
+    - prometheus_data:/prometheus
     depends_on:
     - exporter
     restart: always
@@ -92,3 +93,4 @@ volumes:
   grafana_etc:
   alertmanager-bot_data:
   zerotier_data:
+  prometheus_data:
